@@ -14,7 +14,7 @@ def run_bluesky_bot():
     print("🚀 Blueskyシステム起動中...")
 
     # 1. 検索キーワード（ヒットしやすいワードに調整）
-    cosme_keywords = ["韓国コスメ", "スキンケア 人気", "リップ プチプラ", "アイシャドウ 新作"]
+    cosme_keywords = ["韓国コスメ 人気", "最新 バズりコスメ", "美容液 おすすめ", "プチプラ リップ","神ファンデ", "時短スキンケア", "保湿パック", "デパコス 似", "アイシャドウ パレット", "マスカラ 落ちない", "毛穴ケア", "美白ケア"]
     selected_keyword = random.choice(cosme_keywords)
     print(f"🔎 検索キーワード: {selected_keyword}")
 
@@ -77,3 +77,4 @@ def run_bluesky_bot():
 
 if __name__ == "__main__":
     run_bluesky_bot()
+
