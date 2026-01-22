@@ -31,4 +31,5 @@ jobs:
           # ここでGitHubに保存したSecretsをPythonに渡します
           BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python bluesky_bot.py
