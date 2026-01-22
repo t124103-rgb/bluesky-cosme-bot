@@ -1,6 +1,7 @@
 import os
 import requests
 import random
+import google.generativeai as genai
 from atproto import Client, client_utils
 from PIL import Image
 import io
@@ -10,74 +11,78 @@ RAKUTEN_APP_ID = '1001199996494785241'
 RAKUTEN_AFF_ID = '50418107.bebbb42f.50418108.77932439'
 BLUESKY_HANDLE = os.getenv('BLUESKY_HANDLE')
 BLUESKY_APP_PASSWORD = os.getenv('BLUESKY_APP_PASSWORD')
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+
+# Geminiの設定
+genai.configure(api_key=GEMINI_API_KEY)
+model = genai.GenerativeModel('gemini-1.5-flash')
+
+def generate_ai_text(item_name, price):
+    prompt = f"商品名「{item_name}」、価格「{price}円」のコスメを紹介する、親しみやすいSNS投稿文を100文字以内で作成してください。絵文字を使い、最後は「詳細はリンクをチェック👇」で締めてください。"
+    try:
+        response = model.generate_content(prompt)
+        return response.text.strip()
+    except:
+        return f"✨ おすすめコスメ紹介 ✨\n{item_name[:50]}...\n価格：{price}円\n詳細はリンクをチェック👇"
 
 def run_bluesky_bot():
-    print("🚀 Blueskyシステム起動中...")
+    print("🚀 高機能版システム起動中...")
 
-    # 1. 検索キーワード（ヒットしやすいワードに調整）
-    cosme_keywords = ["韓国コスメ 人気", "最新 バズりコスメ", "美容液 おすすめ", "プチプラ リップ","神ファンデ", "時短スキンケア", "保湿パック", "デパコス 似", "アイシャドウ パレット", "マスカラ 落ちない", "毛穴ケア", "美白ケア"]
+    # 1. 楽天から商品取得
+    cosme_keywords = ["韓国コスメ", "新作コスメ", "神スキンケア", "ベストコスメ"]
     selected_keyword = random.choice(cosme_keywords)
-    print(f"🔎 検索キーワード: {selected_keyword}")
-
-    # 2. 楽天から商品取得
-    r_url = "https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706"
+    
     r_params = {
         "applicationId": RAKUTEN_APP_ID,
         "affiliateId": RAKUTEN_AFF_ID,
         "keyword": selected_keyword,
-        "hits": 5, # 複数取得して空振りを防ぐ
+        "hits": 10,
         "imageFlag": 1
     }
-    res = requests.get(r_url, params=r_params).json()
-
-    # ★安全装置：検索結果があるかチェック
-    if "Items" not in res or len(res["Items"]) == 0:
-        print(f"⚠️ キーワード '{selected_keyword}' で商品が見つかりませんでした。終了します。")
-        return
-
-    # 結果の中からランダムに1つ選ぶ（さらにバリエーションが増えます）
+    res = requests.get("https://app.rakuten.co.jp/services/api/IchibaItem/Search/20170706", params=r_params).json()
     item = random.choice(res["Items"])["Item"]
-    item_name_full = item['itemName']
-    print(f"📦 ヒット商品: {item_name_full[:20]}...")
-    
-    # 3. 画像生成
-    img_url = item["mediumImageUrls"][0]["imageUrl"].replace("?_ex=128x128", "")
-    img_data = requests.get(img_url).content
-    base_img = Image.new("RGB", (600, 600), (255, 255, 255))
-    item_img = Image.open(io.BytesIO(img_data)).convert("RGB").resize((500, 500))
-    base_img.paste(item_img, (50, 20))
-    
-    img_byte_arr = io.BytesIO()
-    base_img.save(img_byte_arr, format='JPEG')
-    img_data_final = img_byte_arr.getvalue()
 
-    # 4. Blueskyへ投稿
-    print("📤 Blueskyへ送信中...")
+    # 2. 情報を抽出（価格・ポイント）
+    price = item['itemPrice']
+    point_rate = item.get('pointRate', 1)
+    point_txt = f" 🔥 ポイント{point_rate}倍！" if point_rate > 1 else ""
+    
+    # 3. AIで紹介文作成
+    ai_text = generate_ai_text(item['itemName'], price)
+
+    # 4. 画像を4枚まで取得・加工
+    img_data_list = []
+    # 楽天の画像URLリストを取得
+    raw_images = [img['imageUrl'].replace("?_ex=128x128", "") for img in item["mediumImageUrls"][:4]]
+    
+    for url in raw_images:
+        img_res = requests.get(url).content
+        # 600x600の白背景に中央配置
+        base_img = Image.new("RGB", (600, 600), (255, 255, 255))
+        item_img = Image.open(io.BytesIO(img_res)).convert("RGB")
+        item_img.thumbnail((550, 550)) # アスペクト比を維持してリサイズ
+        base_img.paste(item_img, ((600-item_img.width)//2, (600-item_img.height)//2))
+        
+        buf = io.BytesIO()
+        base_img.save(buf, format='JPEG')
+        img_data_list.append(buf.getvalue())
+
+    # 5. Blueskyへ投稿
     client = Client()
     client.login(BLUESKY_HANDLE, BLUESKY_APP_PASSWORD)
 
     tb = client_utils.TextBuilder()
     tb.tag("#韓国コスメ", "韓国コスメ")
     tb.text(" ")
-    tb.tag("#美容", "美容")
-    tb.text(" ")
     tb.tag("#楽天", "楽天")
-    tb.text("\n")
-    tb.text(f"テーマ：{selected_keyword}\n\n")
-    tb.link("🔗 楽天で詳細をチェック", item['affiliateUrl'])
-    tb.text("\n\n")
-    
-    # 文字数制限（300文字）の調整
-    current_len = len(tb.build_text())
-    max_name_len = 280 - current_len 
-    display_name = item_name_full if len(item_name_full) <= max_name_len else item_name_full[:max_name_len] + "..."
-    tb.text(display_name)
+    tb.text(f"\nテーマ：{selected_keyword}\n\n")
+    tb.text(f"{ai_text}\n\n")
+    tb.text(f"💰 価格: {price}円{point_txt}\n")
+    tb.link("🔗 楽天で詳細を見る", item['affiliateUrl'])
 
-    client.send_image(text=tb, image=img_data_final, image_alt="Cosmetic Item")
-    print(f"✅ 投稿完了しました！")
+    # 画像を4枚添付して送信
+    client.send_images(text=tb, images=img_data_list)
+    print("✅ 4枚画像・AI文章・価格情報付きで投稿完了！")
 
 if __name__ == "__main__":
     run_bluesky_bot()
-
-
-
