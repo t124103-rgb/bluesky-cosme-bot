@@ -7,8 +7,8 @@ import io
 # --- [設定エリア] ---
 RAKUTEN_APP_ID = '1001199996494785241'
 RAKUTEN_AFF_ID = '50418107.bebbb42f.50418108.77932439'
-BLUESKY_HANDLE = 'dailypromotiontt.bsky.social'
-BLUESKY_APP_PASSWORD = 'm3uu-pfs7-yhay-5lpx'
+BLUESKY_HANDLE = os.getenv('BLUESKY_HANDLE')
+BLUESKY_APP_PASSWORD = os.getenv('BLUESKY_APP_PASSWORD')
 
 def run_bluesky_bot():
     print("🚀 Blueskyシステム起動中...")
@@ -77,4 +77,5 @@ def run_bluesky_bot():
 
 if __name__ == "__main__":
     run_bluesky_bot()
+
 
