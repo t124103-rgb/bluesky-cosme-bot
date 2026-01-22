@@ -2,10 +2,12 @@ name: Daily Cosme Post
 
 on:
   schedule:
-    # 毎日夜21:00（日本時間）に実行する場合
-    # UTC（世界標準時）なので12:00が日本時間の21:00になります
+    # 7:30, 12:30, 21:00 (日本時間) に実行
+    # UTC 22:30, 03:30, 12:00
+    - cron: '30 22 * * *'
+    - cron: '30 3 * * *'
     - cron: '0 12 * * *'
-  workflow_dispatch: # 手動で動かすボタンも作ります
+  workflow_dispatch: # 手動実行ボタンを残す
 
 jobs:
   build:
