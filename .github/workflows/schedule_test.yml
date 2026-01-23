@@ -1,0 +1,9 @@
+name: schedule-test
+on:
+  schedule:
+    - cron: '*/30 * * * *' # 30分毎
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "schedule test run"
