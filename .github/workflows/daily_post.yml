@@ -29,3 +29,6 @@ jobs:
           BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python bluesky_bot.py
+
+git commit --allow-empty -m "force reschedule"
+git push origin main
