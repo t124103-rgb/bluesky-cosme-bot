@@ -3,9 +3,10 @@ name: Daily Cosme Post
 on:
   schedule:
     # 30分を35分に少しだけずらしてみる（混雑回避にもなります）
-    - cron: '35 22 * * *'
-    - cron: '35 3 * * *'
-    - cron: '5 12 * * *'
+    # - cron: '35 22 * * *'
+    # - cron: '35 3 * * *'
+    # - cron: '5 12 * * *'
+    - cron:  '*/15 * * * *'
   workflow_dispatch: # 手動実行ボタンを残す
 
 jobs:
