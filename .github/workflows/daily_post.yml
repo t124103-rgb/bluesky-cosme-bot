@@ -2,24 +2,21 @@ name: Daily Cosme Post
 
 on:
   schedule:
-    # 日本時間の午前7時35分に実行したい場合は UTC 22:35 に設定
-    # - cron: '35 22 * * *'
-    # 現在設定されている「15分おき」の設定
     - cron: '*/15 * * * *'
-  workflow_dispatch: # 手動実行用
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4 # v3からv4へ
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # v4からv5へ
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-          cache: 'pip' # pipのキャッシュを有効化
+          cache: 'pip'
 
       - name: Install dependencies
         run: |
